@@ -5,8 +5,9 @@ A FastAPI backend with two REST APIs for document ingestion and conversational R
 ## Features
 
 - **Document Ingestion API**: Upload PDF/TXT files, chunk with selectable strategies, generate embeddings, store in Qdrant
-- **Conversational RAG API**: Custom RAG implementation with Redis chat memory, multi-turn queries, interview booking
-- **LLMs**: Gemini (primary) and OpenAI (fallback)
+- **Conversational RAG API**: Custom RAG implementation with Redis chat memory, multi-turn queries
+- **Conversational Booking**: Interview booking via natural language (extracts name, email, date, time)
+- **LLMs**: Groq (primary) and Gemini (fallback)
 - **Vector Store**: Qdrant
 - **Chat Memory**: Redis
 - **Metadata**: SQLite with SQLAlchemy async
@@ -32,12 +33,21 @@ cp .env.example .env
 
 Edit `.env`:
 ```
+GROQ_API_KEY=your_groq_api_key
 GOOGLE_API_KEY=your_google_api_key
-OPENAI_API_KEY=your_openai_api_key
 QDRANT_URL=http://localhost:6333
 REDIS_URL=redis://localhost:6379/0
 ```
 
+### 3. Start Infrastructure (Docker)
+
+```bash
+# Qdrant
+docker run -p 6333:6333 qdrant/qdrant
+
+# Redis
+docker run -p 6379:6379 redis:alpine
+```
 
 ### 4. Run the API
 
@@ -77,19 +87,32 @@ curl -X POST "http://localhost:8000/chat/query" \
   -H "Content-Type: application/json" \
   -d '{
     "query": "What does the document say about...?",
-    "session_id": "user-123",
-    "document_id": "optional-doc-id"
+    "session_id": "user-123"
   }'
 ```
 
-**Booking Example:**
+**Conversational Booking Example:**
+
+The system extracts booking details conversationally across multiple messages:
+
 ```bash
+# First message - start booking
 curl -X POST "http://localhost:8000/chat/query" \
   -H "Content-Type: application/json" \
   -d '{
-    "query": "Book an interview for John Doe, john@email.com on 2024-12-25 at 10:00 AM",
+    "query": "I want to book an interview tomorrow at 2pm",
     "session_id": "user-123"
   }'
+# Response: "I'd be happy to help. Could you please provide: name, email?"
+
+# Second message - provide details (same session)
+curl -X POST "http://localhost:8000/chat/query" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "query": "My name is John Doe and my email is john@example.com",
+    "session_id": "user-123"
+  }'
+# Response: "Perfect! I've scheduled your interview for 2024-04-09 at 2pm..."
 ```
 
 ## Chunking Strategies
