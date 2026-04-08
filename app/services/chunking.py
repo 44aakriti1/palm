@@ -9,8 +9,6 @@ from app.core.config import get_settings
 settings = get_settings()
 
 
-# FIX #5: Use str+Enum instead of Literal so FastAPI can validate it
-# correctly from Form() fields (Literal is not natively handled by FastAPI forms).
 class ChunkingStrategy(str, Enum):
     recursive = "recursive"
     character = "character"

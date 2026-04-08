@@ -47,9 +47,6 @@ class InterviewBooking(Base):
     created_at = Column(DateTime, default=datetime.utcnow)
 
 
-# FIX #4: Correct return type for an async generator dependency.
-# Using AsyncSession directly was wrong — this function yields, so it's
-# an AsyncGenerator. FastAPI's Depends() needs this typed correctly.
 async def get_db() -> AsyncGenerator[AsyncSession, None]:
     """Dependency to get database session."""
     async with AsyncSessionLocal() as session:

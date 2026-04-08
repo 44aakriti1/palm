@@ -12,23 +12,17 @@ from app.services.rag_service import RAGService
 
 router = APIRouter(prefix="/chat", tags=["Conversational RAG"])
 
-# Keywords used to decide whether to run the (expensive) booking LLM call.
-# FIX #7: Without this gate every single chat message made an extra LLM
-# round-trip just to check for booking intent — even plain document questions.
 _BOOKING_KEYWORDS: frozenset[str] = frozenset(
     {"book", "interview", "schedule", "appointment", "meeting", "slot", "reserve"}
 )
 
 
-# ── Request / Response schemas ────────────────────────────────────────────────
-
 class ChatRequest(BaseModel):
     query: str
     session_id: str
-    # Note: document_id and use_openai removed - searches all docs, uses Groq/Gemini only
 
     class Config:
-        extra = "ignore"  # Ignore old fields like document_id, use_openai
+        extra = "ignore"
 
 
 class ChatResponse(BaseModel):
@@ -36,14 +30,6 @@ class ChatResponse(BaseModel):
     sources: list[dict]
     session_id: str
     booking_info: Optional[dict] = None
-
-
-# ── Service dependencies ──────────────────────────────────────────────────────
-# FIX #2: Services are created via FastAPI Depends() (one instance per app
-# lifetime via lru_cache-style singletons inside each service class), NOT as
-# bare module-level globals.  Module-level instantiation of RAGService /
-# VectorStoreService tries to connect to Qdrant at import time, crashing the
-# app before startup if Qdrant isn't ready.
 
 def get_chat_memory() -> ChatMemoryService:
     return ChatMemoryService()
@@ -80,9 +66,6 @@ async def chat_query(
         Answer with sources and booking info if a booking was detected
     """
     try:
-        # FIX #7: Only call the booking LLM if the message plausibly contains
-        # booking intent.  Checking for keywords costs ~0 ms; calling the LLM
-        # costs ~500–2000 ms and doubles API spend on every plain question.
         booking_info: Optional[dict] = None
         query_lower = request.query.lower()
         if any(kw in query_lower for kw in _BOOKING_KEYWORDS):
@@ -96,7 +79,6 @@ async def chat_query(
         saved_booking = None
         if booking_info and not booking_info.get("missing_info"):
             if all(booking_info.get(f) for f in ("name", "email", "date", "time")):
-                # Parse relative dates like "tomorrow" to actual YYYY-MM-DD
                 parsed_date = booking_service.parse_relative_date(booking_info["date"])
                 saved_booking = await booking_service.save_booking(
                     session_id=request.session_id,
@@ -106,10 +88,8 @@ async def chat_query(
                     time=booking_info["time"],
                     db=db
                 )
-                # Update booking_info with parsed date for response
                 booking_info["date"] = parsed_date
 
-        # Handle booking flow conversationally
         response_booking_info = None
         answer = None
         sources = []
@@ -118,7 +98,6 @@ async def chat_query(
             response_booking_info = dict(booking_info)
 
             if saved_booking:
-                # Booking is complete - confirm to user
                 response_booking_info["booking_id"] = saved_booking.id
                 response_booking_info["status"] = "confirmed"
                 answer = (
@@ -127,14 +106,11 @@ async def chat_query(
                     f"Booking ID: {saved_booking.id}"
                 )
             elif booking_info.get("missing_info"):
-                # Missing info - ask user for it (skip RAG, focus on booking)
                 missing = ", ".join(booking_info["missing_info"])
                 answer = f"I'd be happy to help you book an interview. Could you please provide: {missing}?"
                 response_booking_info["status"] = "awaiting_info"
 
-        # If no booking answer set, do normal RAG query
         if answer is None:
-            # Process RAG query - searches all documents (no filter)
             result = await rag_service.query(
                 query=request.query,
                 session_id=request.session_id,

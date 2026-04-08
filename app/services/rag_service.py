@@ -11,12 +11,7 @@ class RAGService:
     """Custom RAG implementation without LangChain's RetrievalQAChain."""
 
     def __init__(self) -> None:
-        """Initialize RAG components.
-
-        FIX #1 / #2: VectorStoreService is instantiated here but its
-        Qdrant connection is deferred (lazy) — it won't attempt to reach
-        Qdrant until the first actual store/search call.
-        """
+        """Initialize RAG components."""
         self.vector_store = VectorStoreService()
         self.llm = LLMService()
 

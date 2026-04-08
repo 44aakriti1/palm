@@ -23,9 +23,6 @@ class VectorStoreService:
             api_key=settings.QDRANT_API_KEY
         )
         self.collection_name = settings.QDRANT_COLLECTION_NAME
-        # FIX #1: Do NOT call _ensure_collection() here.
-        # It loads the embedding model + hits Qdrant at import time,
-        # crashing the app if Qdrant isn't running yet.
         self._collection_ready: bool = False
 
     def _ensure_collection_once(self) -> None:
@@ -97,7 +94,6 @@ class VectorStoreService:
             document_id: Parent document ID
             metadata: Additional metadata to store
         """
-        # FIX #1 (continued): Ensure collection exists before first write
         self._ensure_collection_once()
 
         points: List[PointStruct] = []
@@ -136,7 +132,6 @@ class VectorStoreService:
         Returns:
             List of search results with text and metadata
         """
-        # FIX #1 (continued): Ensure collection exists before first read
         self._ensure_collection_once()
 
         query_filter = None

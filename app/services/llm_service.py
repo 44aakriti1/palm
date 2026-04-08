@@ -120,9 +120,6 @@ class LLMService:
 
         response = await self.generate_response(structured_prompt, history, system_prompt)
 
-        # FIX #6: Robust JSON extraction — LLMs often add surrounding text
-        # even when told not to. Strip markdown fences first, then use
-        # regex to find the JSON object anywhere in the response.
         cleaned = response.strip()
 
         # Strip markdown code fences if present

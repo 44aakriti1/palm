@@ -1,4 +1,3 @@
-"""Document Ingestion API routes."""
 from fastapi import APIRouter, UploadFile, File, Form, HTTPException, Depends
 from sqlalchemy.ext.asyncio import AsyncSession
 from typing import Literal
