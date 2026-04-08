@@ -39,17 +39,7 @@ QDRANT_URL=http://localhost:6333
 REDIS_URL=redis://localhost:6379/0
 ```
 
-### 3. Start Infrastructure (Docker)
-
-```bash
-# Qdrant
-docker run -p 6333:6333 qdrant/qdrant
-
-# Redis
-docker run -p 6379:6379 redis:alpine
-```
-
-### 4. Run the API
+### 3. Run the API
 
 ```bash
 uvicorn app.main:app --reload --host 0.0.0.0 --port 8000
