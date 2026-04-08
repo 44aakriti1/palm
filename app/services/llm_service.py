@@ -1,4 +1,3 @@
-"""LLM service for Groq and Gemini."""
 import json
 import re
 from typing import List, Dict, Any
@@ -13,10 +12,8 @@ settings = get_settings()
 
 
 class LLMService:
-    """Service for interacting with LLMs (Groq primary, Gemini fallback)."""
 
     def __init__(self) -> None:
-        """Initialize LLM clients."""
         self.groq: ChatGroq | None = None
         self.gemini: ChatGoogleGenerativeAI | None = None
 
@@ -40,7 +37,7 @@ class LLMService:
         history: List[Dict[str, Any]],
         query: str
     ) -> List:
-        """Format messages for LangChain."""
+        
         messages = []
 
         if system_prompt:
@@ -53,8 +50,7 @@ class LLMService:
                 messages.append(HumanMessage(content=content))
             elif role == "assistant":
                 messages.append(AIMessage(content=content))
-        # Note: "system" role messages from history are intentionally skipped
-        # because they are injected via system_prompt, not replayed.
+        
 
         messages.append(HumanMessage(content=query))
         return messages
@@ -65,16 +61,7 @@ class LLMService:
         history: List[Dict[str, Any]] | None = None,
         system_prompt: str | None = None
     ) -> str:
-        """Generate a response using the LLM.
-
-        Args:
-            query: User query
-            history: Previous chat history
-            system_prompt: System instruction
-
-        Returns:
-            LLM response text
-        """
+        
         history = history or []
         messages = self._format_messages(system_prompt, history, query)
 
@@ -84,9 +71,7 @@ class LLMService:
         elif self.gemini:
             response = await self.gemini.ainvoke(messages)
         else:
-            raise ValueError(
-                "No LLM configured. Set GROQ_API_KEY or GOOGLE_API_KEY in .env"
-            )
+            raise ValueError("No LLM configured")
 
         return str(response.content)
 
@@ -97,20 +82,8 @@ class LLMService:
         history: List[Dict[str, Any]] | None = None,
         system_prompt: str | None = None
     ) -> Dict[str, Any]:
-        """Generate a structured JSON response.
+        
 
-        Args:
-            query: User query
-            output_schema: Expected JSON schema
-            history: Previous chat history
-            system_prompt: System instruction
-
-        Returns:
-            Parsed JSON response dict
-
-        Raises:
-            ValueError: If the LLM response cannot be parsed as JSON
-        """
         schema_str = json.dumps(output_schema, indent=2)
         structured_prompt = (
             f"{query}\n\n"
@@ -122,18 +95,18 @@ class LLMService:
 
         cleaned = response.strip()
 
-        # Strip markdown code fences if present
+
         if cleaned.startswith("```"):
             cleaned = re.sub(r"^```(?:json)?\s*", "", cleaned)
             cleaned = re.sub(r"\s*```$", "", cleaned)
 
-        # Try direct parse first (fast path)
+        
         try:
             return json.loads(cleaned.strip())
         except json.JSONDecodeError:
             pass
 
-        # Fallback: extract the first {...} block from anywhere in the text
+        
         match = re.search(r"\{.*\}", cleaned, re.DOTALL)
         if match:
             try:

@@ -1,4 +1,3 @@
-"""Conversational RAG API routes."""
 from typing import Optional
 
 from fastapi import APIRouter, Depends, HTTPException
@@ -53,18 +52,6 @@ async def chat_query(
     rag_service: RAGService = Depends(get_rag_service),
     booking_service: BookingService = Depends(get_booking_service),
 ) -> ChatResponse:
-    """Process a conversational RAG query with chat memory.
-
-    Args:
-        request: Chat query with session ID and optional document filter
-        db: Database session
-        chat_memory: Redis-backed chat history service
-        rag_service: Custom RAG service
-        booking_service: Interview booking extraction + storage service
-
-    Returns:
-        Answer with sources and booking info if a booking was detected
-    """
     try:
         booking_info: Optional[dict] = None
         query_lower = request.query.lower()
@@ -136,7 +123,6 @@ async def clear_chat_history(
     session_id: str,
     chat_memory: ChatMemoryService = Depends(get_chat_memory),
 ) -> dict:
-    """Clear chat history for a session."""
     await chat_memory.clear_history(session_id)
     return {"status": "success", "message": "Chat history cleared"}
 
@@ -146,6 +132,5 @@ async def get_chat_history(
     session_id: str,
     chat_memory: ChatMemoryService = Depends(get_chat_memory),
 ) -> dict:
-    """Get chat history for a session."""
     history = await chat_memory.get_history(session_id, limit=50)
     return {"session_id": session_id, "messages": history}

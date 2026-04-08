@@ -1,4 +1,3 @@
-"""Custom RAG service — no RetrievalQAChain."""
 from typing import Any, Dict, List, Optional
 
 from app.services.chat_memory import ChatMemoryService
@@ -8,10 +7,8 @@ from app.services.vector_store import VectorStoreService
 
 
 class RAGService:
-    """Custom RAG implementation without LangChain's RetrievalQAChain."""
 
     def __init__(self) -> None:
-        """Initialize RAG components."""
         self.vector_store = VectorStoreService()
         self.llm = LLMService()
 
@@ -23,25 +20,7 @@ class RAGService:
         document_filter: Optional[str] = None,
         top_k: int = 5,
     ) -> Dict[str, Any]:
-        """Process a RAG query with chat memory.
-
-        Steps:
-          1. Load recent chat history from Redis
-          2. Embed the query and retrieve top-k chunks from Qdrant
-          3. Build a grounded system prompt from retrieved context
-          4. Generate an answer with the configured LLM
-          5. Persist the turn to Redis memory
-
-        Args:
-            query: User query text
-            session_id: Session identifier for memory scoping
-            chat_memory: Chat memory service instance
-            document_filter: Optional document ID to restrict retrieval
-            top_k: Number of context chunks to retrieve
-
-        Returns:
-            Dict with keys: answer, sources, session_id
-        """
+       
         # 1. Retrieve conversation history
         history = await chat_memory.get_history(session_id, limit=10)
 

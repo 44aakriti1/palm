@@ -1,11 +1,9 @@
-"""Application configuration using Pydantic Settings."""
 from pydantic_settings import BaseSettings
 from functools import lru_cache
 
 
 class Settings(BaseSettings):
-    """Application settings loaded from environment variables."""
-    
+   
     # LLM API Keys (Groq primary, Gemini fallback)
     GOOGLE_API_KEY: str = ""
     GROQ_API_KEY: str = ""
@@ -30,10 +28,9 @@ class Settings(BaseSettings):
     
     class Config:
         env_file = ".env"
-        extra = "ignore"  # Ignore extra env vars (e.g., old OPENAI_API_KEY)
+        extra = "ignore" 
 
 
 @lru_cache()
 def get_settings() -> Settings:
-    """Get cached settings instance."""
     return Settings()

@@ -1,26 +1,12 @@
-"""File text extraction service."""
 from pathlib import Path
 from io import BytesIO
 import PyPDF2
 
 
 class FileExtractor:
-    """Service for extracting text from PDF and TXT files."""
     
     @staticmethod
     def extract_text(file_content: bytes, filename: str) -> str:
-        """Extract text from file content based on file extension.
-        
-        Args:
-            file_content: Raw bytes of the file
-            filename: Name of the file (used to determine type)
-            
-        Returns:
-            Extracted text as string
-            
-        Raises:
-            ValueError: If file type is not supported
-        """
         file_ext = Path(filename).suffix.lower()
         
         if file_ext == ".pdf":
@@ -32,7 +18,6 @@ class FileExtractor:
     
     @staticmethod
     def _extract_pdf(content: bytes) -> str:
-        """Extract text from PDF bytes."""
         text = ""
         pdf_file = BytesIO(content)
         reader = PyPDF2.PdfReader(pdf_file)
@@ -45,7 +30,6 @@ class FileExtractor:
     
     @staticmethod
     def _extract_txt(content: bytes) -> str:
-        """Extract text from TXT bytes."""
         try:
             return content.decode("utf-8")
         except UnicodeDecodeError:

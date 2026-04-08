@@ -1,4 +1,3 @@
-"""Database configuration and session management."""
 from datetime import datetime
 from typing import AsyncGenerator
 
@@ -23,7 +22,6 @@ Base = declarative_base()
 
 
 class DocumentMetadata(Base):
-    """SQLAlchemy model for document metadata."""
     __tablename__ = "documents"
 
     id = Column(String, primary_key=True)
@@ -35,7 +33,6 @@ class DocumentMetadata(Base):
 
 
 class InterviewBooking(Base):
-    """SQLAlchemy model for interview bookings."""
     __tablename__ = "interview_bookings"
 
     id = Column(Integer, primary_key=True, autoincrement=True)
@@ -48,7 +45,6 @@ class InterviewBooking(Base):
 
 
 async def get_db() -> AsyncGenerator[AsyncSession, None]:
-    """Dependency to get database session."""
     async with AsyncSessionLocal() as session:
         try:
             yield session
@@ -57,6 +53,5 @@ async def get_db() -> AsyncGenerator[AsyncSession, None]:
 
 
 async def init_db() -> None:
-    """Initialize database tables."""
     async with async_engine.begin() as conn:
         await conn.run_sync(Base.metadata.create_all)

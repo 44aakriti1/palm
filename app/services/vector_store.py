@@ -1,4 +1,3 @@
-"""Qdrant vector store service."""
 from typing import List, Dict, Any
 import uuid
 
@@ -14,10 +13,8 @@ settings = get_settings()
 
 
 class VectorStoreService:
-    """Service for managing vector storage in Qdrant."""
 
     def __init__(self) -> None:
-        """Initialize Qdrant client (no connection attempt yet)."""
         self.client = QdrantClient(
             url=settings.QDRANT_URL,
             api_key=settings.QDRANT_API_KEY
@@ -26,13 +23,11 @@ class VectorStoreService:
         self._collection_ready: bool = False
 
     def _ensure_collection_once(self) -> None:
-        """Lazy-init: set up the collection on first actual use."""
         if not self._collection_ready:
             self._ensure_collection()
             self._collection_ready = True
 
     def _ensure_collection(self) -> None:
-        """Create collection if it doesn't exist."""
         from app.services.embeddings import EmbeddingService
 
         sample_embedding = EmbeddingService.generate_single_embedding("sample text")
@@ -57,7 +52,6 @@ class VectorStoreService:
             self._create_collection(vector_size)
 
     def _ensure_payload_index(self) -> None:
-        """Ensure payload index exists for document_id field."""
         try:
             self.client.create_payload_index(
                 collection_name=self.collection_name,
@@ -68,7 +62,6 @@ class VectorStoreService:
             pass  # Index may already exist
 
     def _create_collection(self, vector_size: int) -> None:
-        """Create collection with proper configuration."""
         self.client.create_collection(
             collection_name=self.collection_name,
             vectors_config=VectorParams(size=vector_size, distance=Distance.COSINE)
@@ -86,14 +79,7 @@ class VectorStoreService:
         document_id: str,
         metadata: Dict[str, Any]
     ) -> None:
-        """Store chunks with embeddings in Qdrant.
-
-        Args:
-            chunks: List of text chunks
-            embeddings: List of embedding vectors
-            document_id: Parent document ID
-            metadata: Additional metadata to store
-        """
+        
         self._ensure_collection_once()
 
         points: List[PointStruct] = []
@@ -122,16 +108,7 @@ class VectorStoreService:
         limit: int = 5,
         document_filter: str | None = None
     ) -> List[Dict[str, Any]]:
-        """Search for similar chunks using query embedding.
-
-        Args:
-            query_embedding: Embedding of the query
-            limit: Number of results to return
-            document_filter: Optional document ID to filter by
-
-        Returns:
-            List of search results with text and metadata
-        """
+        
         self._ensure_collection_once()
 
         query_filter = None
@@ -162,11 +139,7 @@ class VectorStoreService:
         ]
 
     def delete_document(self, document_id: str) -> None:
-        """Delete all chunks for a document.
-
-        Args:
-            document_id: Document ID to delete
-        """
+        
         self.client.delete(
             collection_name=self.collection_name,
             points_selector=Filter(

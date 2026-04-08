@@ -19,17 +19,7 @@ async def upload_document(
     chunking_strategy: ChunkingStrategy = Form("recursive"),
     db: AsyncSession = Depends(get_db)
 ) -> dict:
-    """Upload a PDF or TXT file, chunk it, and store in vector DB.
     
-    Args:
-        file: Uploaded file (.pdf or .txt)
-        chunking_strategy: Chunking strategy ("recursive" or "character")
-        db: Database session
-        
-    Returns:
-        Upload result with document ID and chunk count
-    """
-    # Validate file type
     if not file.filename:
         raise HTTPException(status_code=400, detail="No file provided")
     
@@ -41,28 +31,22 @@ async def upload_document(
         )
     
     try:
-        # Read file content
         content = await file.read()
         
-        # Extract text
         text = FileExtractor.extract_text(content, file.filename)
         
         if not text.strip():
             raise HTTPException(status_code=400, detail="No text could be extracted from file")
         
-        # Generate document ID
         document_id = str(uuid.uuid4())
         
-        # Chunk text
         chunks = ChunkingService.chunk_text(text, chunking_strategy)
         
         if not chunks:
             raise HTTPException(status_code=400, detail="No chunks generated from text")
         
-        # Generate embeddings
         embeddings = EmbeddingService.generate_embeddings(chunks)
         
-        # Store in vector DB
         vector_store = VectorStoreService()
         vector_store.store_chunks(
             chunks=chunks,
@@ -75,7 +59,6 @@ async def upload_document(
             }
         )
         
-        # Save metadata to SQL DB
         file_ext = file.filename.split(".")[-1].lower()
         doc_metadata = DocumentMetadata(
             id=document_id,
@@ -106,11 +89,7 @@ async def upload_document(
 async def list_documents(
     db: AsyncSession = Depends(get_db)
 ) -> dict:
-    """List all uploaded documents.
-    
-    Returns:
-        List of documents with metadata
-    """
+            
     from sqlalchemy import select
     result = await db.execute(select(DocumentMetadata))
     documents = result.scalars().all()

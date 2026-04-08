@@ -1,4 +1,3 @@
-"""Text chunking strategies service."""
 from enum import Enum
 from typing import List
 
@@ -15,19 +14,9 @@ class ChunkingStrategy(str, Enum):
 
 
 class ChunkingService:
-    """Service for chunking text using different strategies."""
 
     @staticmethod
     def chunk_text(text: str, strategy: ChunkingStrategy) -> List[str]:
-        """Chunk text using specified strategy.
-
-        Args:
-            text: The text to chunk
-            strategy: The chunking strategy to use
-
-        Returns:
-            List of text chunks
-        """
         if strategy == ChunkingStrategy.recursive:
             return ChunkingService._recursive_chunk(text)
         elif strategy == ChunkingStrategy.character:
@@ -37,7 +26,6 @@ class ChunkingService:
 
     @staticmethod
     def _recursive_chunk(text: str) -> List[str]:
-        """Recursive character text splitter — best for structured documents."""
         splitter = RecursiveCharacterTextSplitter(
             chunk_size=settings.CHUNK_SIZE,
             chunk_overlap=settings.CHUNK_OVERLAP,
@@ -48,7 +36,6 @@ class ChunkingService:
 
     @staticmethod
     def _character_chunk(text: str) -> List[str]:
-        """Simple character text splitter — best for plain text."""
         splitter = CharacterTextSplitter(
             separator="\n",
             chunk_size=settings.CHUNK_SIZE,

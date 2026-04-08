@@ -1,4 +1,3 @@
-"""Interview booking extraction and storage service."""
 from typing import Dict, Any, Optional
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select
@@ -8,10 +7,8 @@ from app.services.llm_service import LLMService
 
 
 class BookingService:
-    """Service for handling interview booking extraction and storage."""
     
     def __init__(self) -> None:
-        """Initialize booking service."""
         self.llm = LLMService()
     
     async def extract_booking_info(
@@ -20,19 +17,6 @@ class BookingService:
         session_id: str,
         chat_memory: ChatMemoryService
     ) -> Optional[Dict[str, Any]]:
-        """Extract booking details from user query using LLM, accumulating across conversation.
-
-        CONSERVATIVE APPROACH: Only extracts info that is EXPLICITLY stated by the user.
-        Never hallucinate or infer missing details.
-
-        Args:
-            query: User message
-            session_id: Session identifier
-            chat_memory: Chat memory service
-
-        Returns:
-            Extracted booking info with any missing fields listed, or None if no booking intent
-        """
         import re
         from datetime import datetime, timedelta
 
@@ -131,16 +115,6 @@ Examples of INVALID (don't do this):
             return None
 
     def parse_relative_date(self, date_str: str) -> str:
-        """Parse relative date terms into actual dates.
-
-        Handles: tomorrow, today, next Monday, etc.
-
-        Args:
-            date_str: Date string from user (e.g., "tomorrow", "2024-12-25")
-
-        Returns:
-            YYYY-MM-DD formatted date or original string if parsing fails
-        """
         from datetime import datetime, timedelta
 
         date_str = date_str.lower().strip()
@@ -183,19 +157,6 @@ Examples of INVALID (don't do this):
         time: str,
         db: AsyncSession
     ) -> InterviewBooking:
-        """Save booking to database.
-        
-        Args:
-            session_id: Session identifier
-            name: Candidate name
-            email: Candidate email
-            date: Interview date
-            time: Interview time
-            db: Database session
-            
-        Returns:
-            Created booking record
-        """
         booking = InterviewBooking(
             session_id=session_id,
             name=name,
@@ -213,15 +174,6 @@ Examples of INVALID (don't do this):
         session_id: str,
         db: AsyncSession
     ) -> list[InterviewBooking]:
-        """Get all bookings for a session.
-        
-        Args:
-            session_id: Session identifier
-            db: Database session
-            
-        Returns:
-            List of bookings
-        """
         result = await db.execute(
             select(InterviewBooking).where(InterviewBooking.session_id == session_id)
         )
