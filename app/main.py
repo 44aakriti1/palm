@@ -22,11 +22,6 @@ app.include_router(ingestion.router)
 app.include_router(chat.router)
 
 
-@app.get("/health")
-async def health_check() -> dict:
-    return {"status": "healthy"}
-
-
 @app.get("/")
 async def root() -> dict:
     return {
